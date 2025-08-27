@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yatra Taxi Booking</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --panel:#111827; /* gray-900 */
+      --muted:#1f2937; /* gray-800 */
+      --text:#e5e7eb; /* gray-200 */
+      --accent:#22c55e; /* green-500 */
+      --accent-2:#38bdf8; /* sky-400 */
+      --danger:#ef4444; /* red-500 */
+      --ring:#64748b; /* slate-500 */
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1225,#0a101f);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text)}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:rgba(15,23,42,.6);border-bottom:1px solid #1f2937;z-index:5}
+    header .wrap{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+    h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.3px}
+    .badge{font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.35)}
+    main{max-width:1200px;margin:18px auto;display:grid;gap:18px;padding:0 18px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+    .card{grid-column:span 12;background:linear-gradient(180deg,#0f172a,#0b1628);border:1px solid #1f2937;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 8px;font-size:18px}
+    .card .content{padding:18px}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .col-6{grid-column:span 12}
+    .col-4{grid-column:span 12}
+    .col-3{grid-column:span 12}
+    @media(min-width:720px){.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}}
+    label{display:block;font-size:12px;color:#a3a3a3;margin:8px 0 6px}
+    input,select,textarea{width:100%;padding:12px 12px;border-radius:12px;background:#0b1222;border:1px solid #243047;color:var(--text);outline:none;transition:.2s}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+    .inline{display:flex;gap:10px;align-items:center}
+    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:600;color:#061018;background:linear-gradient(135deg,#34d399,#22c55e);cursor:pointer;box-shadow:0 8px 18px rgba(34,197,94,.25);transition:.2s}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:linear-gradient(135deg,#60a5fa,#38bdf8);color:#041018}
+    .btn.ghost{background:transparent;border:1px dashed #334155;color:#cbd5e1}
+    .muted{color:#94a3b8;font-size:12px}
+    .preview{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .preview img{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid #243047}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{padding:14px;border-radius:16px;background:linear-gradient(180deg,#0a1120,#0a1426);border:1px solid #1f2937}
+    .kpi .v{font-size:20px;font-weight:800}
+    .receipt{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#08101f;border:1px solid #1f2937;border-radius:14px;padding:14px;white-space:pre-wrap;max-height:300px;overflow:auto}
+    footer{opacity:.7;text-align:center;padding:24px;font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>🛕 Yatra Taxi Booking</h1>
+      <span class="badge">Kailash & Char Dham</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- KPIs / Quick Stats (demo only) -->
+    <section class="grid">
+      <div class="card col-6">
+        <div class="content">
+          <h2>Quick Summary</h2>
+          <div class="kpis">
+            <div class="kpi"><div class="muted">Base Rate</div><div class="v" id="kpiRate">₹18/km</div></div>
+            <div class="kpi"><div class="muted">Season</div><div class="v" id="kpiSeason">Off-peak</div></div>
+            <div class="kpi"><div class="muted">Est. Distance</div><div class="v" id="kpiKm">0 km</div></div>
+            <div class="kpi"><div class="muted">Est. Fare</div><div class="v" id="kpiFare">₹0</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card col-6">
+        <div class="content">
+          <h2>How it works</h2>
+          <p class="muted">Fill driver, trip, and passenger details. Upload photos (optional). Fare auto-calculates from distance, vehicle type, and seasonal multipliers. Click <b>Create Booking</b> to generate a printable receipt (demo; no backend).</p>
+          <div class="inline">
+            <button class="btn ghost" id="resetBtn">Reset</button>
+            <button class="btn secondary" id="printBtn">Print Receipt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Driver Details -->
+    <section class="card">
+      <div class="content">
+        <h2>Driver Details</h2>
+        <div class="row">
+          <div class="col-4">
+            <label>Driver ID</label>
+            <input id="driverId" placeholder="e.g., D101" />
+          </div>
+          <div class="col-4">
+            <label>Driver Name</label>
+            <input id="driverName" placeholder="Rajesh Kumar" />
+          </div>
+          <div class="col-4">
+            <label>Contact Number</label>
+            <input id="driverPhone" type="tel" placeholder="98765 43210" />
+          </div>
+          <div class="col-6">
+            <label>Vehicle Number</label>
+            <input id="vehicleNo" placeholder="UK07 AB 1234" />
+          </div>
+          <div class="col-6">
+            <label>Vehicle Type</label>
+            <select id="vehicleType">
+              <option value="sedan">Sedan</option>
+              <option value="suv" selected>SUV</option>
+              <option value="traveller">Tempo Traveller</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trip Details -->
+    <section class="card">
+      <div class="content">
+        <h2>Trip Details</h2>
+        <div class="row">
+          <div class="col-4">
+            <label>Pickup Station</label>
+            <input id="pickup" list="pickupList" placeholder="Haridwar, Rishikesh, Delhi..." />
+            <datalist id="pickupList">
+              <option>Haridwar</option>
+              <option>Rishikesh</option>
+              <option>Dehradun</option>
+              <option>Delhi</option>
+              <option>Haldwani</option>
+            </datalist>
+          </div>
+          <div class="col-4">
+            <label>Destination</label>
+            <input id="destination" list="destList" placeholder="Kedarnath, Badrinath, Kailash..." />
+            <datalist id="destList">
+              <option>Kedarnath</option>
+              <option>Badrinath</option>
+              <option>Gangotri</option>
+              <option>Yamunotri</option>
+              <option>Kailash Mansarovar</option>
+            </datalist>
+          </div>
+          <div class="col-4">
+            <label>Date of Journey</label>
+            <input id="journeyDate" type="date" />
+          </div>
+          <div class="col-3">
+            <label>Distance (km)</label>
+            <input id="km" type="number" placeholder="e.g., 225" min="0" />
+          </div>
+          <div class="col-3">
+            <label>Passengers</label>
+            <input id="pax" type="number" value="1" min="1" />
+          </div>
+          <div class="col-3">
+            <label>One-way / Round-trip</label>
+            <select id="tripType">
+              <option value="oneway" selected>One-way</option>
+              <option value="round">Round-trip</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Waiting (hrs, optional)</label>
+            <input id="waiting" type="number" min="0" step="0.5" placeholder="0" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Photos -->
+    <section class="card">
+      <div class="content">
+        <h2>Photographs (Optional)</h2>
+        <div class="row">
+          <div class="col-6">
+            <label>Pickup Place Photo</label>
+            <input id="photoPickup" type="file" accept="image/*" />
+            <div class="preview" id="previewPickup"></div>
+          </div>
+          <div class="col-6">
+            <label>Destination Photo</label>
+            <input id="photoDest" type="file" accept="image/*" />
+            <div class="preview" id="previewDest"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fare -->
+    <section class="card">
+      <div class="content">
+        <h2>Fare Details</h2>
+        <div class="row">
+          <div class="col-3">
+            <label>Base Rate (₹ / km)</label>
+            <input id="rate" type="number" min="1" value="18" />
+          </div>
+          <div class="col-3">
+            <label>Vehicle Multiplier</label>
+            <select id="vehMult">
+              <option value="1">Sedan ×1.0</option>
+              <option value="1.2" selected>SUV ×1.2</option>
+              <option value="1.5">Traveller ×1.5</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Seasonal Multiplier</label>
+            <select id="seasonMult">
+              <option value="1">Off-peak ×1.0</option>
+              <option value="1.15">Peak ×1.15</option>
+              <option value="0.9">Monsoon ×0.9</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Extras (₹)</label>
+            <input id="extras" type="number" min="0" value="0" />
+          </div>
+        </div>
+        <div style="margin-top:12px" class="inline">
+          <button class="btn" id="calcBtn">Recalculate Fare</button>
+          <span class="muted">Fare auto-updates when inputs change.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions + Receipt -->
+    <section class="card">
+      <div class="content">
+        <h2>Create Booking</h2>
+        <div class="inline" style="gap:12px;flex-wrap:wrap">
+          <button class="btn secondary" id="createBtn">Create Booking</button>
+          <button class="btn ghost" id="copyJsonBtn">Copy JSON</button>
+        </div>
+        <p class="muted" style="margin-top:10px">This demo keeps data in the browser only. Hook these fields to your backend API later.</p>
+        <div class="receipt" id="receipt">Fill the form and click “Create Booking” to see a receipt here…</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    © 2025 Yatra Taxi Demo • Built for B.Tech project showcase
+  </footer>
+
+  <script>
+    // --- Helpers ---
+    const $ = (id)=>document.getElementById(id);
+
+    // Preview uploaded images
+    function handleImage(input, target){
+      const box = $(target);
+      box.innerHTML = '';
+      const file = input.files && input.files[0];
+      if(!file) return;
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.onload = ()=> URL.revokeObjectURL(img.src);
+      box.appendChild(img);
+    }
+    $('photoPickup').addEventListener('change', e=>handleImage(e.target,'previewPickup'));
+    $('photoDest').addEventListener('change', e=>handleImage(e.target,'previewDest'));
+
+    // Auto seasonal multiplier based on date (simple heuristic for Char Dham peak: May–Jun, Sep–Oct)
+    function autoSeason(){
+      const d = $('journeyDate').value ? new Date($('journeyDate').value) : new Date();
+      const m = d.getMonth(); // 0=Jan
+      let tag = 'Off-peak';
+      let mult = '1';
+      if([4,5,8,9].includes(m)){ tag='Peak'; mult='1.15'; }
+      if([6,7].includes(m)){ tag='Monsoon'; mult='0.9'; }
+      $('seasonMult').value = mult;
+      $('kpiSeason').textContent = tag;
+    }
+
+    // Vehicle multiplier sync with type
+    function syncVehicleMult(){
+      const type = $('vehicleType').value;
+      const map = {sedan:'1', suv:'1.2', traveller:'1.5'};
+      $('vehMult').value = map[type] || '1';
+    }
+
+    // Fare calculation
+    function calcFare(){
+      const km = Number($('km').value||0);
+      const rate = Number($('rate').value||0);
+      const v = Number($('vehMult').value||1);
+      const s = Number($('seasonMult').value||1);
+      const extras = Number($('extras').value||0);
+      const wait = Number($('waiting').value||0);
+      const tripType = $('tripType').value;
+
+      let distance = km;
+      if(tripType==='round') distance *= 2;
+
+      const waitingCharge = wait * 150; // ₹150/hr demo
+      const fare = Math.max(0, Math.round(distance * rate * v * s + extras + waitingCharge));
+
+      $('kpiKm').textContent = distance + ' km';
+      $('kpiFare').textContent = '₹' + fare.toLocaleString('en-IN');
+      $('kpiRate').textContent = '₹' + rate + '/km';
+      return {distance, fare, waitingCharge};
+    }
+
+    // Create booking JSON + receipt
+    function createBooking(){
+      const {distance, fare, waitingCharge} = calcFare();
+      const booking = {
+        booking_id: 'B' + Math.random().toString(36).slice(2,8).toUpperCase(),
+        driver: {
+          id: $('driverId').value.trim(),
+          name: $('driverName').value.trim(),
+          contact: $('driverPhone').value.trim(),
+          vehicle_no: $('vehicleNo').value.trim(),
+          vehicle_type: $('vehicleType').value
+        },
+        trip: {
+          pickup: $('pickup').value.trim(),
+          destination: $('destination').value.trim(),
+          date_of_journey: $('journeyDate').value,
+          trip_type: $('tripType').value,
+          passengers: Number($('pax').value||1),
+          distance_km: distance
+        },
+        fare: {
+          base_rate_per_km: Number($('rate').value||0),
+          vehicle_multiplier: Number($('vehMult').value||1),
+          seasonal_multiplier: Number($('seasonMult').value||1),
+          waiting_charge: waitingCharge,
+          extras: Number($('extras').value||0),
+          total: fare
+        },
+        photos: {
+          pickup: $('photoPickup').files?.[0]?.name || null,
+          destination: $('photoDest').files?.[0]?.name || null
+        },
+        status: 'Confirmed'
+      };
+
+      // Simple validation
+      const required = [booking.driver.name, booking.trip.pickup, booking.trip.destination, booking.trip.date_of_journey];
+      if(required.some(v=>!v)){
+        alert('Please fill Driver Name, Pickup, Destination and Date of Journey.');
+        return;
+      }
+
+      const lines = [];
+      lines.push('YATRA TAXI BOOKING RECEIPT');
+      lines.push('—'.repeat(32));
+      lines.push('Booking ID: ' + booking.booking_id);
+      lines.push('Date of Journey: ' + booking.trip.date_of_journey);
+      lines.push('Trip: ' + booking.trip.pickup + ' → ' + booking.trip.destination + ' (' + booking.trip.trip_type + ')');
+      lines.push('Passengers: ' + booking.trip.passengers);
+      lines.push('Driver: ' + (booking.driver.name || '-') + ' | ' + (booking.driver.vehicle_no || '-') + ' (' + booking.driver.vehicle_type + ')');
+      lines.push('Distance: ' + booking.trip.distance_km + ' km');
+      lines.push('Fare: ₹' + booking.fare.total.toLocaleString('en-IN') + '  [rate ₹' + booking.fare.base_rate_per_km + '/km × v' + booking.fare.vehicle_multiplier + ' × s' + booking.fare.seasonal_multiplier + ']');
+      if(booking.fare.waiting_charge>0) lines.push('Includes waiting: ₹' + booking.fare.waiting_charge);
+      if(booking.fare.extras>0) lines.push('Extras: ₹' + booking.fare.extras);
+      if(booking.photos.pickup||booking.photos.destination){
+        lines.push('Photos: ' + [booking.photos.pickup, booking.photos.destination].filter(Boolean).join(', '));
+      }
+      lines.push('Status: ' + booking.status);
+      lines.push('—'.repeat(32));
+      lines.push('JSON:');
+      lines.push(JSON.stringify(booking, null, 2));
+
+      $('receipt').textContent = lines.join('\n');
+      navigator.clipboard?.writeText(JSON.stringify(booking,null,2)).catch(()=>{});
+      return booking;
+    }
+
+    // Auto events
+    ['km','rate','vehMult','seasonMult','extras','waiting','tripType'].forEach(id=>$(id).addEventListener('input', calcFare));
+    $('vehicleType').addEventListener('change', ()=>{syncVehicleMult(); calcFare();});
+    $('journeyDate').addEventListener('change', ()=>{autoSeason(); calcFare();});
+    $('calcBtn').addEventListener('click', calcFare);
+    $('createBtn').addEventListener('click', createBooking);
+    $('copyJsonBtn').addEventListener('click', ()=>{
+      const txt = $('receipt').textContent || '';
+      const jsonStart = txt.indexOf('{');
+      if(jsonStart>-1){
+        const json = txt.slice(jsonStart);
+        navigator.clipboard?.writeText(json).then(()=>alert('Booking JSON copied!'));
+      } else {
+        alert('Create a booking first.');
+      }
+    });
+    $('resetBtn').addEventListener('click', ()=> location.reload());
+    $('printBtn').addEventListener('click', ()=> window.print());
+
+    // initial
+    autoSeason();
+    syncVehicleMult();
+    calcFare();
+  </script>
+</body>
+</html>
